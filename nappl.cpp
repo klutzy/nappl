@@ -3,12 +3,12 @@
 #include <windows.h>
 #include <shellapi.h>
 
-bool RunNappledProcess(wchar_t* path, wchar_t* cmdline) {
+bool RunNappledProcess(wchar_t* apppath, wchar_t* cmdline, wchar_t* dir) {
     STARTUPINFO startupinfo = { sizeof(STARTUPINFO), 0, };
     PROCESS_INFORMATION processinfo = { 0, };
 
-    BOOL created = ::CreateProcessW(path, cmdline, nullptr, nullptr,
-    FALSE, CREATE_SUSPENDED, nullptr, nullptr, &startupinfo, &processinfo);
+    BOOL created = ::CreateProcessW(apppath, cmdline, nullptr, nullptr,
+    FALSE, CREATE_SUSPENDED, nullptr, dir, &startupinfo, &processinfo);
     if (created == FALSE) {
         ::MessageBoxW(nullptr, L"failed to create process", nullptr, 0);
         return false;
@@ -56,10 +56,10 @@ bool RunNappledProcess(wchar_t* path, wchar_t* cmdline) {
 
 extern "C"
 int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prev_instance,
-        char* cmdline, int cmdshow) {
+        char* cmdline_, int cmdshow) {
     (void)instance;
     (void)prev_instance;
-    (void)cmdline;
+    (void)cmdline_;
     (void)cmdshow;
 
     int argc = 0;
@@ -69,7 +69,18 @@ int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prev_instance,
         return 0;
     }
 
-    RunNappledProcess(argv[1], argv[1]);
+    wchar_t* cmdline = argv[1];
+    wchar_t* appname = cmdline; // TODO
+    size_t len = ::GetFullPathNameW(appname, 0, nullptr, nullptr);
+    wchar_t* path = new wchar_t[len];
+    wchar_t* filename = nullptr;
+    DWORD r = ::GetFullPathNameW(appname, len, path, &filename);
+    wchar_t* dir = new wchar_t[len];
+    wcscpy(dir, path);
+    dir[filename - path] = L'\0';
+    RunNappledProcess(path, cmdline, dir);
+    delete[] path;
+    delete[] dir;
     ::LocalFree(argv);
     return 0;
 }
