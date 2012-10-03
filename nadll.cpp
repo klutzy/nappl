@@ -92,6 +92,7 @@ BOOL WINAPI NewSetWindowTextA(HWND wnd, const char* string) {
 
     BOOL ret = ::SetWindowTextW(wnd, new_string);
 
+    delete[] new_string;
     return ret;
 }
 
