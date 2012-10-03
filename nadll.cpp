@@ -131,6 +131,79 @@ UINT WINAPI NewSetDlgItemTextA(HWND dlg, int item, char* string) {
     return ret;
 }
 
+HANDLE WINAPI NewCreateFileA(const char* filename, DWORD access,
+        DWORD share_mode, LPSECURITY_ATTRIBUTES security_attr,
+        DWORD creation_disp, DWORD attr, HANDLE template_file) {
+    wchar_t* new_filename = m2w(filename);
+
+    HANDLE ret = ::CreateFileW(new_filename, access, share_mode,
+            security_attr, creation_disp, attr, template_file);
+
+    delete[] new_filename;
+    return ret;
+}
+
+BOOL WINAPI NewDeleteFileA(const char* filename) {
+    wchar_t* new_filename = m2w(filename);
+    BOOL ret = ::DeleteFileW(new_filename);
+    delete[] new_filename;
+    return ret;
+}
+
+DWORD WINAPI NewGetCurrentDirectoryA(DWORD len, char* buffer) {
+    DWORD ret = ::GetCurrentDirectoryW(0, NULL);
+    wchar_t* new_buffer = new wchar_t[ret];
+    ret = ::GetCurrentDirectoryW(ret, new_buffer);
+
+    ret = ::WideCharToMultiByte(new_cp, 0, new_buffer,
+            ret, buffer, len, NULL, NULL);
+
+    delete[] new_buffer;
+
+    return ret;
+}
+
+BOOL WINAPI NewSetCurrentDirectoryA(const char* filename) {
+    wchar_t* new_filename = m2w(filename);
+
+    BOOL ret = ::SetCurrentDirectoryW(new_filename);
+
+    delete[] new_filename;
+    return ret;
+}
+
+BOOL WINAPI NewCreateDirectoryA(const char* name,
+        LPSECURITY_ATTRIBUTES security_attr) {
+    wchar_t* new_name = m2w(name);
+
+    BOOL ret = ::CreateDirectoryW(new_name, security_attr);
+
+    delete[] new_name;
+    return ret;
+}
+
+BOOL WINAPI NewCreateDirectoryExA(const char* templatename,
+        const char* name, LPSECURITY_ATTRIBUTES security_attr) {
+    wchar_t* new_templatename = m2w(templatename);
+    wchar_t* new_name = m2w(name);
+
+    BOOL ret = ::CreateDirectoryExW(new_templatename, new_name,
+            security_attr);
+
+    delete[] new_templatename;
+    delete[] new_name;
+    return ret;
+}
+
+BOOL WINAPI NewRemoveDirectoryA(const char* name) {
+    wchar_t* new_name = m2w(name);
+
+    BOOL ret = ::RemoveDirectoryW(new_name);
+
+    delete[] new_name;
+    return ret;
+}
+
 struct api_thunk {
     const wchar_t* dllname;
     const char* funcname;
@@ -144,6 +217,13 @@ struct api_thunk {
 struct api_thunk apis[] = {
     X(kernel32, GetACP),
     X(kernel32, GetOEMCP),
+    X(kernel32, CreateFileA),
+    X(kernel32, DeleteFileA),
+    X(kernel32, GetCurrentDirectoryA),
+    X(kernel32, SetCurrentDirectoryA),
+    X(kernel32, CreateDirectoryA),
+    X(kernel32, CreateDirectoryExA),
+    X(kernel32, RemoveDirectoryA),
 
     X(gdi32, TextOutA),
 
