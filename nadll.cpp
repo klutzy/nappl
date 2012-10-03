@@ -28,7 +28,8 @@ UINT WINAPI NewGetOEMCP() {
     return new_cp;
 }
 
-int WINAPI NewMessageBoxA(HWND hwnd, const char* text, const char* caption, UINT type) {
+int WINAPI NewMessageBoxA(HWND hwnd, const char* text, const char* caption,
+        UINT type) {
     wchar_t* new_text = nullptr;
     wchar_t* new_caption = nullptr;
     if (text) {
@@ -60,8 +61,9 @@ BOOL WINAPI NewTextOutA(HDC hdc, int x, int y, const char* string, int size) {
 }
 
 HWND WINAPI NewCreateWindowExA(DWORD extrastyle, const char* classname,
-        const char* windowname, DWORD style, int x, int y, int width, int height,
-        HWND parent, HMENU menu, HINSTANCE instance, LPVOID param) {
+        const char* windowname, DWORD style, int x, int y, int width,
+        int height, HWND parent, HMENU menu, HINSTANCE instance,
+        LPVOID param) {
     wchar_t* new_classname = new wchar_t[100];
     ::MultiByteToWideChar(orig_cp, 0, classname, -1, new_classname, 100);
     wchar_t* new_windowname = m2w(windowname);
@@ -81,7 +83,8 @@ int WINAPI NewGetWindowTextA(HWND wnd, char* string, int count) {
 
     int ret = ::GetWindowTextW(wnd, new_string, new_count);
 
-    ::WideCharToMultiByte(new_cp, 0, new_string, new_count, string, count, NULL, NULL);
+    ::WideCharToMultiByte(new_cp, 0, new_string, new_count, string, count,
+            NULL, NULL);
 
     delete[] new_string;
     return ret;
@@ -112,7 +115,8 @@ UINT WINAPI NewGetDlgItemTextA(HWND dlg, int item, char* string, int count) {
     wchar_t* new_string = new wchar_t[new_count];
     UINT ret = ::GetDlgItemTextW(dlg, item, new_string, new_count);
 
-    ::WideCharToMultiByte(new_cp, 0, new_string, new_count, string, count, NULL, NULL);
+    ::WideCharToMultiByte(new_cp, 0, new_string, new_count, string, count,
+            NULL, NULL);
 
     delete[] new_string;
     return ret;
@@ -155,13 +159,15 @@ struct api_thunk apis[] = {
 #undef X
 
 void modify_api(const struct api_thunk& thunk) {
-	FARPROC addr = ::GetProcAddress(GetModuleHandleW(thunk.dllname), thunk.funcname);
+    FARPROC addr = ::GetProcAddress(GetModuleHandleW(thunk.dllname),
+            thunk.funcname);
 
     unsigned char* func = (unsigned char*)addr;
     DWORD daddr = (DWORD)thunk.new_func;
 
     DWORD old_protection;
-    ::VirtualProtect((void*)addr, 1024, PAGE_EXECUTE_READWRITE, &old_protection);
+    SIZE_T size = 7;
+    ::VirtualProtect((void*)addr, size, PAGE_EXECUTE_READWRITE, &old_protection);
     func[0] = 0xb8; // eax <- daddr
     func[1] = daddr & 0xff;
     func[2] = (daddr >> 8) & 0xff;
@@ -170,7 +176,7 @@ void modify_api(const struct api_thunk& thunk) {
     func[5] = 0xff; // jmp eax
     func[6] = 0xe0;
 
-    VirtualProtect((void*)addr, 1024, old_protection, NULL);
+    VirtualProtect((void*)addr, size, old_protection, NULL);
 }
 
 template<typename T, size_t N>

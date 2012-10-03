@@ -35,8 +35,8 @@ bool RunNappledProcess(wchar_t* path, wchar_t* cmdline) {
         return false;
     }
 
-    HANDLE remote_thread = ::CreateRemoteThread(processinfo.hProcess, nullptr, 0,
-            (LPTHREAD_START_ROUTINE)::GetProcAddress(
+    HANDLE remote_thread = ::CreateRemoteThread(processinfo.hProcess, nullptr,
+            0, (LPTHREAD_START_ROUTINE)::GetProcAddress(
             ::GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW"),
             remote_mem, 0, nullptr);
 
