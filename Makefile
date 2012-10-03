@@ -13,7 +13,7 @@ RES=windres
 RM=rm
 
 CFLAGS=-Wall -O3 -std=c++0x -DUNICODE -D_UNICODE -DWIN32 -D_WINDOWS -DNADLL=L\"$(DLL)\"
-LDFLAGS=-mwindows -lstdc++
+LDFLAGS=-mwindows -lstdc++ -static
 
 .PHONY: all
 all: $(EXE) $(DLL)
